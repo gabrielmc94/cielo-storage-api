@@ -125,7 +125,7 @@ app.delete('/', async (req, res, next) => {
 
 app.post('/upload', async (req, res, next) => {
     try {
-        const { prefix = "" } = req.body;
+        const { prefix = "", newFolderName } = req.body;
         const { files } = req;
         const container = req.userId; // user's id
         let blobName;
@@ -137,14 +137,14 @@ app.post('/upload', async (req, res, next) => {
             containerClient = blobServiceClient.getContainerClient(container);
 
             for (const file of files.uploadFiles) {
-                blobName = prefix + file.name;
+                blobName = prefix + `${newFolderName ? `${newFolderName}/` : ""}` + file.name;
                 blockBlobClient = containerClient.getBlockBlobClient(blobName);
                 promises.push(blockBlobClient.uploadData(file.data, file.data.length));
             }
 
             await Promise.all(promises);
         } else {
-            blobName = prefix + files.uploadFiles.name;
+            blobName = prefix + `${newFolderName ? `${newFolderName}/` : ""}` + files.uploadFiles.name;
             containerClient = blobServiceClient.getContainerClient(container);
             blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
@@ -156,7 +156,7 @@ app.post('/upload', async (req, res, next) => {
         res.status(200).json(blobs);
     } catch (err) {
         console.log(err);
-        req.status(500).send();
+        res.status(500).send();
     }
 });
 
